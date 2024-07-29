@@ -1,0 +1,63 @@
+declare "cadvisor" {
+  // Define arguments
+  argument "targets" {
+    comment = "List of targets to scrape metrics from"
+  }
+
+  argument "forward_to" {
+    comment = "Metrics receiver to forward collected data"
+  }
+
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics (default: 15s)"
+    optional = true
+  }
+
+  argument "authorization_file" {
+    comment = "Path to the credentials file for authorization (default: /var/run/secrets/kubernetes.io/serviceaccount/token)"
+    optional = true
+  }
+
+  argument "tls_insecure_skip_verify" {
+    comment = "Whether to skip TLS verification (default: true)"
+    optional = true
+  }
+
+  // Module components using the arguments
+  discovery.relabel "cadvisor" {
+    targets = argument.targets.value
+    rule {
+      replacement = "https"
+      target_label = "__scheme__"
+    }
+    rule {
+      replacement = "metrics/cadvisor"
+      target_label = "__metrics_path__"
+    }
+  }
+
+  prometheus.scrape "cadvisor" {
+    targets = discovery.relabel.cadvisor.output
+    forward_to = argument.forward_to.value
+    scrape_interval = coalesce(argument.scrape_interval.value, "15s")
+    authorization {
+      credentials_file = coalesce(argument.authorization_file.value, "/var/run/secrets/kubernetes.io/serviceaccount/token")
+      type = "Bearer"
+    }
+    tls_config {
+      insecure_skip_verify = coalesce(argument.tls_insecure_skip_verify.value, true)
+    }
+    clustering {
+      enabled = true
+    }
+  }
+
+  prometheus.relabel "cadvisor" {
+    forward_to = argument.forward_to.value
+    rule {
+      action = "drop"
+      source_labels = ["__name__"]
+      regex = "container_tasks_state"
+    }
+  }
+}
