@@ -9,7 +9,7 @@ declare "cadvisor" {
   }
 
   argument "scrape_interval" {
-    comment = "How often to scrape metrics (default: 15s)"
+    comment = "How often to scrape metrics (default: 60s)"
     optional = true
   }
 
@@ -39,7 +39,7 @@ declare "cadvisor" {
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
     forward_to = argument.forward_to.value
-    scrape_interval = coalesce(argument.scrape_interval.value, "15s")
+    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
     authorization {
       credentials_file = coalesce(argument.authorization_file.value, "/var/run/secrets/kubernetes.io/serviceaccount/token")
       type = "Bearer"
