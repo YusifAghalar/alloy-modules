@@ -28,11 +28,5 @@ declare "minio_scrape" {
     bearer_token = argument.bearer_token.value
     metrics_path = coalesce(argument.metrics_path.value, "/metrics")
     scheme = coalesce(argument.scheme.value, "http")
-
-    static_configs = [
-      for target in argument.targets.value {
-        {"__address__" = target}
-      }
-    ]
   }
 }
