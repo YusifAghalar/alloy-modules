@@ -1,0 +1,315 @@
+declare "kubernetes_components" {
+  argument "node_targets" {
+    comment = "The targets for the Kubernetes nodes discovery"
+  }
+  argument "forward_to" {
+    comment = "The metrics receiver to forward data to"
+  }
+  argument "pods"{
+    comment = "The targets for the Kubernetes pods discovery"
+  }
+  argument "credentials_file"{
+    comment = "Credentials file location to access api_server"
+  }
+
+  discovery.relabel "etcd" {
+    targets = argument.node_targets.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_node_address_Hostname"]
+      regex = ".*master.*"
+    }
+    rule {
+      source_labels = ["__address__"]
+      regex = "(.+):.*"
+      replacement = "${1}:2381"
+      target_label = "__address__"
+    }
+  }
+
+  discovery.relabel "scheduler" {
+    targets = argument.node_targets.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_node_address_Hostname"]
+      regex = ".*master.*"
+    }
+    rule {
+      source_labels = ["__address__"]
+      regex = "(.+):.*"
+      replacement = "${1}:10259"
+      target_label = "__address__"
+    }
+    rule {
+      replacement = "metrics"
+      target_label = "__metrics_path__"
+    }
+    rule {
+      replacement = "https"
+      target_label = "__scheme__"
+    }
+  }
+
+  discovery.relabel "apiserver" {
+    targets = argument.node_targets.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_node_address_Hostname"]
+      regex = ".*master.*"
+    }
+    rule {
+      source_labels = ["__address__"]
+      regex = "(.+):.*"
+      replacement = "${1}:6443"
+      target_label = "__address__"
+    }
+    rule {
+      replacement = "metrics"
+      target_label = "__metrics_path__"
+    }
+    rule {
+      replacement = "https"
+      target_label = "__scheme__"
+    }
+  }
+
+  discovery.relabel "kubelet" {
+    targets = argument.node_targets.value
+    rule {
+      replacement = "https"
+      target_label = "__scheme__"
+    }
+    rule {
+      replacement = "metrics"
+      target_label = "__metrics_path__"
+    }
+  }
+
+  discovery.relabel "kube_proxy" {
+    targets = arguments.pods.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "kube-system"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_label_k8s_app"]
+      regex = "kube-proxy"
+    }
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
+      replacement = "k8s_${1}"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(.+)"
+      replacement = "${1}:10249"
+      target_label = "__address__"
+    }
+  }
+
+  discovery.relabel "kube_dns" {
+    targets = arguments.pods.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "kube-system"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_label_k8s_app"]
+      regex = "kube-dns"
+    }
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
+      replacement = "k8s_${1}"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(.+)"
+      replacement = "${1}:9153"
+      target_label = "__address__"
+    }
+  }
+
+  discovery.relabel "calico" {
+    targets = arguments.pods.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "kube-system"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_label_k8s_app"]
+      regex = "calico-node"
+    }
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
+      replacement = "k8s_${1}"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(.+)"
+      replacement = "${1}:9091"
+      target_label = "__address__"
+    }
+  }
+
+  discovery.relabel "kube_nginx" {
+    targets = arguments.pods.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "ingress-nginx"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+      regex = "ingress-nginx"
+    }
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
+      replacement = "k8s_${1}"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_container_port_name"]
+      regex         = "metrics" 
+    }
+  }
+
+  discovery.relabel "controller_manager" {
+    targets = arguments.pods.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "kube-system"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_label_component"]
+      regex = "kube-controller-manager"
+    }
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
+      replacement = "k8s_${1}"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(.+)"
+      replacement = "${1}:10257"
+      target_label = "__address__"
+    }
+    rule {
+      replacement = "metrics"
+      target_label = "__metrics_path__"
+    }
+    rule {
+      replacement = "https"
+      target_label = "__scheme__"
+    }
+  }
+
+  discovery.relabel "metallb" {
+    targets = arguments.pods.value
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_namespace"]
+      regex = "metallb-system"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_label_app"]
+      regex = "metallb"
+    }
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
+      replacement = "k8s_${1}"
+    }
+    rule {
+      source_labels = ["__meta_kubernetes_pod_ip"]
+      regex = "(.+)"
+      replacement = "${1}:7472"
+      target_label = "__address__"
+    }
+  }
+
+  prometheus.relabel "kube_nginx" {
+    forward_to = argument.forward_to.value
+    rule {
+      action = "keep"
+      source_labels = ["__name__"]
+      regex         = "nginx_ingress_controller_(request_duration_seconds|requests).*"
+    }
+  }
+
+  prometheus.relabel "api_server" {
+    forward_to = argument.forward_to.value
+    rule {
+      action = "keep"
+      source_labels = ["__name__"]
+      regex         = "(apiserver_request_(total|duration).*)|workqueue_depth|process_cpu_seconds_total|process_resident_memory_bytes"
+    }
+    rule {
+      action = "drop"
+      source_labels = ["__name__"]
+      regex         = "apiserver_request_duration_seconds_bucket"
+    }  
+  }
+
+  prometheus.scrape "kube_components" {
+    targets = concat(
+      discovery.relabel.kube_proxy.output,
+      discovery.relabel.kube_dns.output,
+      discovery.relabel.kubelet.output,
+      discovery.relabel.calico.output,
+      discovery.relabel.controller_manager.output,
+      discovery.relabel.scheduler.output,
+      discovery.relabel.etcd.output,
+      discovery.relabel.metallb.output
+    )
+    forward_to = argument.forward_to.value
+    scrape_interval = "15s"
+    authorization {
+      credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+      type = "Bearer"
+    }
+    clustering {
+      enabled = true
+    }
+    tls_config {
+      insecure_skip_verify = true
+    }
+  }
+
+  prometheus.scrape "kube_nginx" {
+    targets = discovery.relabel.kube_nginx.output
+    forward_to = [prometheus.relabel.kube_nginx.receiver]
+    clustering {
+      enabled = true
+    }
+  }
+
+  prometheus.scrape "api_server" {
+    targets = discovery.relabel.apiserver.output
+    forward_to = [prometheus.relabel.api_server.receiver]
+    authorization {
+      credentials_file = argument.credentials_file.value
+      type = "Bearer"
+    }
+    clustering {
+      enabled = true
+    }
+    tls_config {
+      insecure_skip_verify = true
+    }
+  }
+}
