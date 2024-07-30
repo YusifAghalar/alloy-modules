@@ -1,0 +1,38 @@
+declare "minio_scrape" {
+  // Define arguments
+  argument "job_name" {
+    comment = "Name of the scrape job"
+  }
+
+  argument "bearer_token" {
+    comment = "Bearer token for authentication"
+  }
+
+  argument "metrics_path" {
+    comment = "Path to scrape metrics from"
+    optional = true
+  }
+
+  argument "scheme" {
+    comment = "Scheme to use (http or https)"
+    optional = true
+  }
+
+  argument "targets" {
+    comment = "List of targets to scrape metrics from"
+  }
+
+  // Define the scrape configuration
+  prometheus.scrape "scrape_config" {
+    job_name = argument.job_name.value
+    bearer_token = argument.bearer_token.value
+    metrics_path = coalesce(argument.metrics_path.value, "/metrics")
+    scheme = coalesce(argument.scheme.value, "http")
+
+    static_configs = [
+      for target in argument.targets.value {
+        {"__address__" = target}
+      }
+    ]
+  }
+}
