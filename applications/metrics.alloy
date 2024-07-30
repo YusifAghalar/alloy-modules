@@ -1,4 +1,4 @@
-declare "applications" {
+declare "metrics" {
   argument "targets" {
     comment = "The targets to be discovered"
   }
