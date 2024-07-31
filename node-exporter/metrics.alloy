@@ -23,7 +23,7 @@ declare "metrics" {
   }
 
   prometheus.relabel "node_exporter" {
-    forward_to = [argument.forward_to.value]
+    forward_to = argument.forward_to.value
 
     rule {
       source_labels = ["__name__"]
