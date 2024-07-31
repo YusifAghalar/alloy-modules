@@ -86,7 +86,7 @@ declare "metrics" {
   }
 
   discovery.relabel "kube_proxy" {
-    targets = arguments.pods.value
+    targets = argument.pods.value
     rule {
       action = "keep"
       source_labels = ["__meta_kubernetes_namespace"]
@@ -111,7 +111,7 @@ declare "metrics" {
   }
 
   discovery.relabel "kube_dns" {
-    targets = arguments.pods.value
+    targets = argument.pods.value
     rule {
       action = "keep"
       source_labels = ["__meta_kubernetes_namespace"]
@@ -136,7 +136,7 @@ declare "metrics" {
   }
 
   discovery.relabel "calico" {
-    targets = arguments.pods.value
+    targets = argument.pods.value
     rule {
       action = "keep"
       source_labels = ["__meta_kubernetes_namespace"]
@@ -161,7 +161,7 @@ declare "metrics" {
   }
 
   discovery.relabel "kube_nginx" {
-    targets = arguments.pods.value
+    targets = argument.pods.value
     rule {
       action = "keep"
       source_labels = ["__meta_kubernetes_namespace"]
@@ -185,7 +185,7 @@ declare "metrics" {
   }
 
   discovery.relabel "controller_manager" {
-    targets = arguments.pods.value
+    targets = argument.pods.value
     rule {
       action = "keep"
       source_labels = ["__meta_kubernetes_namespace"]
@@ -218,7 +218,7 @@ declare "metrics" {
   }
 
   discovery.relabel "metallb" {
-    targets = arguments.pods.value
+    targets = argument.pods.value
     rule {
       action = "keep"
       source_labels = ["__meta_kubernetes_namespace"]
