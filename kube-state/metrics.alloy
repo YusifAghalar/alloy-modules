@@ -1,7 +1,7 @@
 declare "metrics" {
   // Define arguments
   argument "targets" {
-    comment = "List of targets to scrape metrics from"
+    comment = "List of  pod targets to scrape metrics from. For example:discovery.kubernetes.pods.targets"
   }
 
   argument "forward_to" {
