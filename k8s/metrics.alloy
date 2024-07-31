@@ -1,4 +1,4 @@
-declare "k8s_components_metrics" {
+declare "metrics" {
   argument "node_targets" {
     comment = "The targets for the Kubernetes nodes discovery"
   }
@@ -274,7 +274,7 @@ declare "k8s_components_metrics" {
       discovery.relabel.controller_manager.output,
       discovery.relabel.scheduler.output,
       discovery.relabel.etcd.output,
-      discovery.relabel.metallb.output
+      discovery.relabel.metallb.output,
     )
     forward_to = argument.forward_to.value
     scrape_interval = "15s"
