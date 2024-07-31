@@ -1,4 +1,4 @@
-declare "kubernetes_components" {
+declare "metrics" {
   argument "node_targets" {
     comment = "The targets for the Kubernetes nodes discovery"
   }
