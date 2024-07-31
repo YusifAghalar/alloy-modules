@@ -1,4 +1,4 @@
-declare "node_exporter" {
+declare "metrics" {
   // Define arguments
   argument "targets" {
     comment = "List of targets to scrape metrics from"
@@ -14,7 +14,7 @@ declare "node_exporter" {
   }
 
   prometheus.scrape "node_exporter" {
-    targets = discovery.relabel.node_exporter.output
+    targets = argument.targets.value
     forward_to = argument.forward_to.value
     scrape_interval = coalesce(argument.scrape_interval.value, "15s")
     clustering {
