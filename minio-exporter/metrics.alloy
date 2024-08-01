@@ -1,4 +1,4 @@
-declare "minio_scrape" {
+declare "metrics" {
   // Define arguments
   argument "job_name" {
     comment = "Name of the scrape job"
@@ -22,12 +22,15 @@ declare "minio_scrape" {
     comment = "List of targets to scrape metrics from"
   }
 
-  // Define the scrape configuration
-  prometheus.scrape "scrape_config" {
+  prometheus.scrape "minio" {
     job_name = argument.job_name.value
     bearer_token = argument.bearer_token.value
     metrics_path = coalesce(argument.metrics_path.value, "/metrics")
     scheme = coalesce(argument.scheme.value, "http")
     targets = argument.value.targets
+
+    clustering {
+      enabled = true
+    }
   }
 }
