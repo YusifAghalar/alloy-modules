@@ -13,6 +13,10 @@ declare "metrics" {
     optional = true
   }
 
+  argument "job_name" {
+    comment = "Job name to be passed to scraper"
+  }
+
   prometheus.scrape "node_exporter" {
     targets = argument.targets.value
     forward_to = argument.forward_to.value
@@ -20,6 +24,7 @@ declare "metrics" {
     clustering {
       enabled = true
     }
+    job_name = argument.job_name.value
   }
 
   prometheus.relabel "node_exporter" {
