@@ -1,4 +1,4 @@
-declare "cadvisor" {
+declare "metrics" {
   // Define arguments
   argument "targets" {
     comment = "List of targets to scrape metrics from"
