@@ -42,7 +42,7 @@ declare "metrics" {
 
   prometheus.scrape "applications" {
     targets = discovery.relabel.applications.output
-    forward_to = argument.forward_to.value
+    forward_to = [prometheus.relabel.applications.receiver]
 
     clustering {
       enabled = true
