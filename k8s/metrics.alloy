@@ -5,9 +5,6 @@ declare "metrics" {
   argument "forward_to" {
     comment = "The metrics receiver to forward data to"
   }
-  argument "pods"{
-    comment = "The targets for the Kubernetes pods discovery"
-  }
   argument "credentials_file"{
     comment = "Credentials file location to access api_server"
   }
