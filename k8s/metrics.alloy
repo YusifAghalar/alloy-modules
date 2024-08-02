@@ -101,7 +101,7 @@ declare "metrics" {
     }
   }
   discovery.relabel "kube_proxy" {
-    targets = discovery.kubernetes.pods_kube_proxy
+    targets = discovery.kubernetes.pods_kube_proxy.targets
     rule {
       action = "labelmap"
       regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
