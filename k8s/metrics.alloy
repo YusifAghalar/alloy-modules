@@ -126,7 +126,7 @@ declare "metrics" {
 
     selectors {
       role = "pod"
-      label = "k8s-app=kube_dns"
+      label = "k8s-app=kube-dns"
     }
   }
   discovery.relabel "kube_dns" {
