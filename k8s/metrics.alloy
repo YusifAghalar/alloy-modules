@@ -85,18 +85,23 @@ declare "metrics" {
     }
   }
 
+  discovery.kubernetes "pods_kube_proxy" {
+    role = "pod"
+
+    attach_metadata {
+      node = true
+    }
+    namespaces {
+      names = ["kube-system"]
+    }
+
+    selectors {
+      role = "pod"
+      label = "k8s-app=kube-proxy"
+    }
+  }
   discovery.relabel "kube_proxy" {
-    targets = argument.pods.value
-    rule {
-      action = "keep"
-      source_labels = ["__meta_kubernetes_namespace"]
-      regex = "kube-system"
-    }
-    rule {
-      action = "keep"
-      source_labels = ["__meta_kubernetes_pod_label_k8s_app"]
-      regex = "kube-proxy"
-    }
+    targets = discovery.kubernetes.pods_kube_proxy
     rule {
       action = "labelmap"
       regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
