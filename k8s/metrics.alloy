@@ -174,18 +174,24 @@ declare "metrics" {
     }
   }
 
+discovery.kubernetes "nginx" {
+    role = "pod"
+
+    attach_metadata {
+      node = true
+    }
+    namespaces {
+      names = ["ingress-nginx"]
+    }
+
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=ingress-nginx"
+    }
+  }
+
   discovery.relabel "kube_nginx" {
-    targets = argument.pods.value
-    rule {
-      action = "keep"
-      source_labels = ["__meta_kubernetes_namespace"]
-      regex = "ingress-nginx"
-    }
-    rule {
-      action = "keep"
-      source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
-      regex = "ingress-nginx"
-    }
+    targets = discovery.kubernetes.nginx.targets
     rule {
       action = "labelmap"
       regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
@@ -198,18 +204,24 @@ declare "metrics" {
     }
   }
 
+  discovery.kubernetes "controller_manager" {
+    role = "pod"
+
+    attach_metadata {
+      node = true
+    }
+    namespaces {
+      names = ["kube-system"]
+    }
+
+    selectors {
+      role = "pod"
+      label = "component=kube-controller-manager"
+    }
+  }
+
   discovery.relabel "controller_manager" {
-    targets = argument.pods.value
-    rule {
-      action = "keep"
-      source_labels = ["__meta_kubernetes_namespace"]
-      regex = "kube-system"
-    }
-    rule {
-      action = "keep"
-      source_labels = ["__meta_kubernetes_pod_label_component"]
-      regex = "kube-controller-manager"
-    }
+    targets = discovery.kubernetes.controller_manager.targets
     rule {
       action = "labelmap"
       regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
@@ -230,9 +242,24 @@ declare "metrics" {
       target_label = "__scheme__"
     }
   }
+  discovery.kubernetes "metallb" {
+    role = "pod"
+
+    attach_metadata {
+      node = true
+    }
+    namespaces {
+      names = ["metallb-system"]
+    }
+
+    selectors {
+      role = "pod"
+    }
+  }
+
 
   discovery.relabel "metallb" {
-    targets = argument.pods.value
+    targets = discovery.kubernetes.metallb.targets
     rule {
       action = "keep"
       source_labels = ["__meta_kubernetes_namespace"]
