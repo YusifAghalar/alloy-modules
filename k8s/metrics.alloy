@@ -174,7 +174,7 @@ declare "metrics" {
     }
   }
 
-discovery.kubernetes "nginx" {
+  discovery.kubernetes "nginx" {
     role = "pod"
 
     attach_metadata {
@@ -318,7 +318,7 @@ discovery.kubernetes "nginx" {
       discovery.relabel.metallb.output,
     )
     forward_to = argument.forward_to.value
-    scrape_interval = "15s"
+    scrape_interval = "60s"
     authorization {
       credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       type = "Bearer"
