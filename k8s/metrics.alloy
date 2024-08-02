@@ -318,7 +318,7 @@ declare "metrics" {
       discovery.relabel.metallb.output,
     )
     forward_to = argument.forward_to.value
-    scrape_interval = "60s"
+    scrape_interval = "30s"
     authorization {
       credentials_file = "/var/run/secrets/kubernetes.io/serviceaccount/token"
       type = "Bearer"
