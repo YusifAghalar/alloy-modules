@@ -42,7 +42,7 @@ declare "metrics" {
 
   prometheus.scrape "applications" {
     targets = discovery.relabel.applications.output
-    forward_to = argument.forward_to.value
+    forward_to = [prometheus.relabel.applications.receiver]
 
     clustering {
       enabled = true
@@ -54,7 +54,7 @@ declare "metrics" {
 
     rule {
       action = "labeldrop"
-      regex  = "instance|otel_scope_name|otel_scope_version|net_host_name"
+      regex  = "instance|otel_scope_name|otel_scope_version|net_host_name|net_host_port|net_peer_name|net_protocol_name|net_protocol_version"
     }
   }
 }
