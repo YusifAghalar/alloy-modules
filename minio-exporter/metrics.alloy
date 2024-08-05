@@ -21,6 +21,9 @@ declare "metrics" {
   argument "targets" {
     comment = "List of targets to scrape metrics from"
   }
+  argument "forward_to" {
+    comment = "Forward to target"
+  }
 
   prometheus.scrape "minio" {
     job_name = argument.job_name.value
@@ -28,7 +31,7 @@ declare "metrics" {
     metrics_path = coalesce(argument.metrics_path.value, "/metrics")
     scheme = coalesce(argument.scheme.value, "http")
     targets = argument.targets.value
-
+    forward_to = argument.forward_to.value
     clustering {
       enabled = true
     }
