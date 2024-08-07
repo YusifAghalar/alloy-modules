@@ -311,7 +311,6 @@ declare "metrics" {
       discovery.relabel.calico.output,
       discovery.relabel.controller_manager.output,
       discovery.relabel.scheduler.output,
-      discovery.relabel.etcd.output,
       discovery.relabel.metallb.output,
     )
     forward_to = argument.forward_to.value
@@ -343,6 +342,17 @@ declare "metrics" {
       credentials_file = argument.credentials_file.value
       type = "Bearer"
     }
+    clustering {
+      enabled = true
+    }
+    tls_config {
+      insecure_skip_verify = true
+    }
+  }
+
+    prometheus.scrape "etcd" {
+    targets =  discovery.relabel.etcd.output
+    forward_to = argument.forward_to.value
     clustering {
       enabled = true
     }
