@@ -294,13 +294,13 @@ declare "metrics" {
     rule {
       action = "keep"
       source_labels = ["__name__"]
-      regex         = "(apiserver_request_(total|duration).*)|workqueue_depth|process_cpu_seconds_total|process_resident_memory_bytes"
+      regex         = "(apiserver_request_(total|duration).*)|workqueue_depth|process_cpu_seconds_total|process_resident_memory_bytes|up"
     }
     rule {
       action = "drop"
       source_labels = ["__name__"]
       regex         = "apiserver_request_duration_seconds_bucket"
-    }  
+    }
   }
 
   prometheus.scrape "kube_components" {
