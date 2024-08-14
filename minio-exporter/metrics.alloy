@@ -41,7 +41,7 @@ declare "metrics" {
       enabled = true
     }
     tls_config {
-      insecure_skip_verify = coalesce(argument.skip_verify.value, "true")
+      insecure_skip_verify = coalesce(argument.skip_verify.value, true)
     }
   }
 }
