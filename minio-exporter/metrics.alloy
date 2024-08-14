@@ -24,7 +24,12 @@ declare "metrics" {
   argument "forward_to" {
     comment = "Forward to target"
   }
+  argument "skip_verify" {
+    comment = "Skip insecure tls verification (default : true)"
+    optional = true
+  }
 
+    
   prometheus.scrape "minio" {
     job_name = argument.job_name.value
     bearer_token = argument.bearer_token.value
@@ -34,6 +39,9 @@ declare "metrics" {
     forward_to = argument.forward_to.value
     clustering {
       enabled = true
+    }
+    tls_config {
+      insecure_skip_verify = coalesce(argument.skip_verify.value, "true")
     }
   }
 }
