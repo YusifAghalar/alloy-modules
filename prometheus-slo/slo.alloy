@@ -1,0 +1,26 @@
+declare "slo"{
+
+    argument "url" {
+        comment = "URL to send metrics to"
+    }
+
+    prometheus.relabel "default" {
+        forward_to = [prometheus.remote_write.prometheus_slo.receiver]
+        
+        rule {
+            action = "keep"
+            source_labels = ["__name__"]
+            regex = "http_server_duration_milliseconds_count"
+        }
+    }
+
+    prometheus.remote_write "default" {
+        endpoint {
+            url = arguments.url.value
+        }
+    }
+
+    export "receiver" {
+        value = prometheus.relabel.default.receiver
+    }
+}
