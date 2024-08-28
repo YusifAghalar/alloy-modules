@@ -4,13 +4,20 @@ declare "slo"{
         comment = "URL to send metrics to"
     }
 
+    argument "regex"{
+        comment = "Regex to keep metrics",
+        optional = true,
+        default = "http_server_duration_milliseconds_count|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_total|otlp_exporter_exported_total",
+
+    }
+
     prometheus.relabel "default" {
         forward_to = [prometheus.remote_write.default.receiver]
         
         rule {
             action = "keep"
             source_labels = ["__name__"]
-            regex = "http_server_duration_milliseconds_count"
+            regex = argument.regex.value
         }
     }
 
