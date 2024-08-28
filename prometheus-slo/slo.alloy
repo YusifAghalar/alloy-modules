@@ -16,7 +16,7 @@ declare "slo"{
 
     prometheus.remote_write "default" {
         endpoint {
-            url = arguments.url.value
+            url = argument.url.value
         }
     }
 
