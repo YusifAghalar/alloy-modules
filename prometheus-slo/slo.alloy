@@ -5,7 +5,7 @@ declare "slo"{
     }
 
     prometheus.relabel "default" {
-        forward_to = [prometheus.remote_write.prometheus_slo.receiver]
+        forward_to = [prometheus.remote_write.default.receiver]
         
         rule {
             action = "keep"
