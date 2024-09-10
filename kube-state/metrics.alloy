@@ -10,6 +10,7 @@ declare "metrics" {
 
   argument "scrape_interval" {
     comment = "How often to scrape metrics (default: 60s)"
+    default = "60s"
     optional = true
   }
 
@@ -28,7 +29,7 @@ declare "metrics" {
     targets    = discovery.relabel.kube_state_metrics.output
     forward_to = argument.forward_to.value
 
-    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_interval = argument.scrape_interval.value
 
     clustering {
       enabled = true
