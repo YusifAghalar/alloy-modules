@@ -6,11 +6,13 @@ declare "frontend_application" {
 
   argument "listen_address" {
     comment = "Address to listen for incoming requests"
+    default = "0.0.0.0"
     optional = true
   }
 
   argument "cors_allowed_origins" {
     comment = "CORS allowed origins"
+    default = ["*"]
     optional = true
   }
 
@@ -55,8 +57,8 @@ declare "frontend_application" {
       "service_namespace" = argument.service_namespace.value,
     }
     server {
-      listen_address = coalesce(argument.listen_address.value, "0.0.0.0")
-      cors_allowed_origins = coalesce(argument.cors_allowed_origins.value, ["*"])
+      listen_address = argument.listen_address.value
+      cors_allowed_origins = argument.cors_allowed_origins.value
     }
     output {
       logs   = [loki.process.default.receiver]
