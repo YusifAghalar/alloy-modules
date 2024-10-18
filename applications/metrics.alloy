@@ -5,6 +5,7 @@ declare "metrics" {
 
   argument "port" {
     comment = "The port to be listened for metrics"
+    default = "9464"
     optional = true
   }
 
@@ -18,7 +19,7 @@ declare "metrics" {
     rule {
       action = "keep"
       source_labels = ["__meta_kubernetes_pod_container_port_number"]
-      regex = coalesce(argument.port.value, "9464")
+      regex = argument.port.value
     }
 
     rule {
@@ -54,7 +55,7 @@ declare "metrics" {
 
     rule {
       action = "labeldrop"
-      regex  = "instance|otel_scope_name|otel_scope_version|net_host_name|net_host_port|net_protocol_name|net_protocol_version"
+      regex  = "otel_scope_version|net_host_port|net_protocol_name|net_protocol_version"
     }
   }
 }

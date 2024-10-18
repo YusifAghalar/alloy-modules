@@ -8,14 +8,17 @@ declare "metrics" {
   }
   argument "scrape_interval" {
     comment = "How often to scrape metrics (default: 60s)"
+    default = "60s"
     optional = true
   }
   argument "authorization_file" {
     comment = "Path to the credentials file for authorization (default: /var/run/secrets/kubernetes.io/serviceaccount/token)"
+    default = "/var/run/secrets/kubernetes.io/serviceaccount/token"
     optional = true
   }
   argument "tls_insecure_skip_verify" {
     comment = "Whether to skip TLS verification (default: true)"
+    default = true
     optional = true
   }
 
@@ -35,13 +38,13 @@ declare "metrics" {
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
     forward_to = argument.forward_to.value
-    scrape_interval = coalesce(argument.scrape_interval.value, "60s")
+    scrape_interval = argument.scrape_interval.value
     authorization {
-      credentials_file = coalesce(argument.authorization_file.value, "/var/run/secrets/kubernetes.io/serviceaccount/token")
+      credentials_file = argument.authorization_file.value
       type = "Bearer"
     }
     tls_config {
-      insecure_skip_verify = coalesce(argument.tls_insecure_skip_verify.value, true)
+      insecure_skip_verify = argument.tls_insecure_skip_verify.value
     }
     clustering {
       enabled = true

@@ -10,11 +10,13 @@ declare "metrics" {
 
   argument "metrics_path" {
     comment = "Path to scrape metrics from"
+    default = "/metrics"
     optional = true
   }
 
   argument "scheme" {
     comment = "Scheme to use (http or https)"
+    default = "http"
     optional = true
   }
 
@@ -26,6 +28,7 @@ declare "metrics" {
   }
   argument "skip_verify" {
     comment = "Skip insecure tls verification (default : true)"
+    default = true
     optional = true
   }
 
@@ -33,15 +36,15 @@ declare "metrics" {
   prometheus.scrape "minio" {
     job_name = argument.job_name.value
     bearer_token = argument.bearer_token.value
-    metrics_path = coalesce(argument.metrics_path.value, "/metrics")
-    scheme = coalesce(argument.scheme.value, "http")
+    metrics_path = argument.metrics_path.value
+    scheme = argument.scheme.value
     targets = argument.targets.value
     forward_to = argument.forward_to.value
     clustering {
       enabled = true
     }
     tls_config {
-      insecure_skip_verify = coalesce(argument.skip_verify.value, true)
+      insecure_skip_verify = argument.skip_verify.value
     }
   }
 }
