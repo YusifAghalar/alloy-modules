@@ -42,19 +42,38 @@ declare "metrics" {
 
   prometheus.scrape "applications" {
     targets = discovery.relabel.applications.output
-    forward_to = [prometheus.relabel.applications.receiver]
-
+    forward_to = [otelcol.receiver.prometheus.default.receiver]
     clustering {
       enabled = true
     }
   }
 
-  prometheus.relabel "applications" {
-    forward_to = argument.forward_to.value
-
-    rule {
-      action = "labeldrop"
-      regex  = "instance|otel_scope_name|otel_scope_version|net_host_name|net_host_port|net_protocol_name|net_protocol_version"
+  otelcol.receiver.prometheus "default" {
+    output {
+      metrics = [otelcol.processor.transform.default.input]
     }
   }
+  
+  otelcol.processor.transform "default" {
+    error_mode = "ignore"
+
+    metrics_statements {
+      context = "metric"
+      statements = [
+        `aggregate_on_attributes("sum",["http_route","k8s_pod_name","le","http_status_code","http_method"]) where name == "http_server_duration_milliseconds_bucket"`,
+
+      ]
+    }
+
+    output{
+      metrics =[otelcol.exporter.prometheus.default]
+    }
+  }
+
+  otelcol.exporter.prometheus "default" {
+    forward_to = argument.forward_to.value
+  }
+
+
+
 }
