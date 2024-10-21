@@ -60,7 +60,7 @@ declare "metrics" {
 
     metric_statements {
       context = "resource"
-      statements = [`keep_keys(attributes, ["job_name"])`]
+      statements = [`keep_keys(attributes, ["job"])`]
     }
 
     metric_statements {
