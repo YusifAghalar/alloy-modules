@@ -51,23 +51,17 @@ declare "metrics" {
 
   otelcol.receiver.prometheus "default" {
     output {
-      metrics = [otelcol.processor.attributes.default.input]
-    }
-  }
-
-  otelcol.processor.attributes "default" {
-    action {
-        key = "instance"
-        action = "delete"
-    }
-    output {
       metrics = [otelcol.processor.transform.default.input]
     }
-}
+  }
   
   otelcol.processor.transform "default" {
     error_mode = "ignore"
 
+    metric_statements {
+      context = "resource"
+      statements = [`delete_key(attributes, "instance")`]
+    }
 
     metric_statements {
       context = "metric"
