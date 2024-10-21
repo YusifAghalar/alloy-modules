@@ -61,8 +61,8 @@ declare "metrics" {
     metric_statements {
       context = "metric"
       statements = [
-        `aggregate_on_attributes("sum",["http_route","k8s_pod_name","le","http_status_code","http_method","service_namespace","service_name"]) where name == "http_server_duration_milliseconds_bucket"`,
-        `aggregate_on_attributes("sum",["http_route","k8s_pod_name","le","http_status_code","http_method","service_namespace","service_name"]) where name == "http_client_duration_milliseconds_bucket"`,
+        `aggregate_on_attributes("sum",["http_route","le","http_status_code","http_method","service_namespace","service_name"]) where name == "http_server_duration_milliseconds_bucket"`,
+        `aggregate_on_attributes("sum",["http_route","le","http_status_code","http_method","service_namespace","service_name"]) where name == "http_client_duration_milliseconds_bucket"`,
       ]
     }
 
