@@ -1,0 +1,89 @@
+declare "metrics" {
+  argument "targets" {
+    comment = "The targets to be discovered"
+  }
+
+  argument "port" {
+    comment = "The port to be listened for metrics"
+    optional = true
+  }
+
+  argument "forward_to" {
+    comment = "The metrics receiver to forward data to"
+  }
+
+  discovery.relabel "applications" {
+    targets = argument.targets.value
+
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_container_port_number"]
+      regex = coalesce(argument.port.value, "9464")
+    }
+
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(pod_label_app_io_name|pod_name)"
+      replacement = "k8s_${1}"
+    }
+
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      target_label  = "service_namespace"
+      action        = "replace"
+    }
+
+    rule {
+      source_labels = ["__meta_kubernetes_pod_container_name"]
+      target_label  = "service_name"
+      action        = "replace"
+    }
+  }
+
+  prometheus.scrape "applications" {
+    targets = discovery.relabel.applications.output
+    forward_to = [otelcol.receiver.prometheus.default.receiver]
+
+    clustering {
+      enabled = true
+    }
+  }
+
+  otelcol.receiver.prometheus "default" {
+    output {
+      metrics = [otelcol.processor.attributes.default.input]
+    }
+  }
+
+  otelcol.processor.attributes "default" {
+    action {
+        key = "instance"
+        action = "delete"
+    }
+    output {
+      metrics = [otelcol.processor.transform.default.input]
+    }
+}
+  
+  otelcol.processor.transform "default" {
+    error_mode = "ignore"
+
+
+    metric_statements {
+      context = "metric"
+      statements = [
+        `aggregate_on_attributes("sum",["http_route","le","http_status_code","http_method","service_namespace","service_name"]) where name == "http_server_duration_milliseconds_bucket"`,
+        `aggregate_on_attributes("sum",["http_route","le","http_status_code","http_method","service_namespace","service_name"]) where name == "http_client_duration_milliseconds_bucket"`,
+      ]
+    }
+
+    output{
+      metrics = [otelcol.exporter.prometheus.default.input]
+    }
+  }
+
+  otelcol.exporter.prometheus "default" {
+    forward_to = argument.forward_to.value
+  }
+
+}
