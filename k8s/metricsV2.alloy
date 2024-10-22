@@ -357,7 +357,7 @@ declare "metrics" {
       context = "metric"
       statements = [
         `delete_matching_keys(resource.attributes, "service.instance.id") where name == "nginx_ingress_controller_request_duration_seconds_bucket"`,
-        `aggregate_on_attributes("sum",["le","ingress","status","controller_pod","controller_class","controller_namespace"]) where name == "nginx_ingress_controller_request_duration_seconds_bucket"`,
+        `aggregate_on_attributes("sum",["le","ingress","status","controller_pod","path","controller_class","controller_namespace"]) where name == "nginx_ingress_controller_request_duration_seconds_bucket"`,
       ]
     }
     
