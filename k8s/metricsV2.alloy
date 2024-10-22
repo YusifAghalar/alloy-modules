@@ -337,7 +337,11 @@ declare "metrics" {
 
     metrics {
       metric = [
-        `not IsMatch(name, "nginx_ingress_controller_(request_duration_seconds|requests).*")`
+        `not IsMatch(name, "nginx_ingress_controller_(request_duration_seconds|requests).*")`,
+      ]
+
+      datapoint = [
+        `Double(attributes["le"])  < 0.05`,
       ]
     }
 
@@ -356,6 +360,7 @@ declare "metrics" {
         `aggregate_on_attributes("sum",["le","ingress","status","controller_pod","controller_class","controller_namespace"]) where name == "nginx_ingress_controller_request_duration_seconds_bucket"`,
       ]
     }
+    
 
     output {
       metrics = [otelcol.exporter.prometheus.nginx.input]
