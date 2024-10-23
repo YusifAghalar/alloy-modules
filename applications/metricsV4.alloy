@@ -56,7 +56,7 @@ declare "metrics" {
   }
   
   otelcol.processor.transform "default" {
-    error_mode = "ignore"
+    error_mode = "propogate"
     
     metric_statements {
       context = "metric"
