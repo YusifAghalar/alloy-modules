@@ -67,7 +67,7 @@ declare "metrics" {
     }
 
     output{
-      metrics = [argument.forward_to.value]
+      metrics = argument.forward_to.value
     }
   }
 
