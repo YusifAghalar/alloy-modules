@@ -51,9 +51,28 @@ declare "metrics" {
 
   otelcol.receiver.prometheus "default" {
     output {
+      metrics = [otelcol.processor.filter.default.input]
+    }
+  }
+
+  otelcol.processor.filter "default" {
+    error_mode = "ignore"
+
+    metrics {
+      metric = [
+        `not IsMatch(name, "http_(server|client)_duration_milliseconds_bucket")`,
+      ]
+
+      datapoint = [
+        `Double(attributes["le"])  < 100`,
+      ]
+    }
+
+    output {
       metrics = [otelcol.processor.transform.default.input]
     }
   }
+
   
   otelcol.processor.transform "default" {
     error_mode = "ignore"
