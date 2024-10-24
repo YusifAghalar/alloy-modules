@@ -59,10 +59,6 @@ declare "metrics" {
     error_mode = "ignore"
 
     metrics {
-      metric = [
-        `not IsMatch(name, "http_(server|client)_duration_milliseconds_bucket")`,
-      ]
-
       datapoint = [
         `Double(attributes["le"])  < 100`,
       ]
