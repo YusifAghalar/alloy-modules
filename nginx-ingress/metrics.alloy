@@ -1,0 +1,79 @@
+declare "metrics" {
+  argument "forward_to" {
+    comment = "The metrics receiver to forward data to"
+  }
+
+  discovery.kubernetes "default" {
+    role = "pod"
+
+    attach_metadata {
+      node = true
+    }
+    namespaces {
+      names = ["ingress-nginx"]
+    }
+
+    selectors {
+      role = "pod"
+      label = "app.kubernetes.io/name=ingress-nginx"
+    }
+  }
+
+  discovery.relabel "default" {
+    targets = discovery.kubernetes.default.targets
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(namespace|pod_name|node_name|pod_controller_name|pod_ip)"
+      replacement = "k8s_${1}"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_container_port_name"]
+      regex         = "metrics" 
+    }
+  }
+
+  prometheus.scrape "default" {
+    targets = discovery.relabel.default.output
+    forward_to = [otelcol.receiver.prometheus.default.receiver]
+    clustering {
+      enabled = true
+    }
+  }
+
+  otelcol.receiver.prometheus "default" {
+    output {
+      metrics = [otelcol.processor.filter.nginx.input]
+    }
+  }
+
+  otelcol.processor.filter "nginx" {
+    error_mode = "ignore"
+
+    metrics {
+      metric = [
+        `not IsMatch(name, "nginx_ingress_controller_(request_duration_seconds|requests).*")`,
+      ]
+      datapoint = [
+        `IsMatch(metric.name, ".*seconds.*") and  Double(attributes["le"])  < 0.1`,
+      ]
+    }
+    output {
+      metrics = [otelcol.processor.transform.nginx.input]
+    }
+  }
+
+  otelcol.processor.transform "nginx" {
+    error_mode = "ignore"
+    
+    metric_statements {
+      context = "metric"
+      statements = [
+        `aggregate_on_attributes("sum",["le","ingress","status","path"]) where name == "nginx_ingress_controller_request_duration_seconds_bucket"`,
+      ]
+    }
+    output {
+      metrics = argument.forward_to.value
+    }
+  }
+}
