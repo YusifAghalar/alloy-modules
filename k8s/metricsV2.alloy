@@ -341,7 +341,7 @@ declare "metrics" {
       ]
 
       datapoint = [
-        `Double(attributes["le"])  < 0.05`,
+        `IsMatch(metric.name, ".*seconds.*") and  Double(attributes["le"])  < 0.1`,
       ]
     }
 
