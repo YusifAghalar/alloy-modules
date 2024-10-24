@@ -264,7 +264,7 @@ declare "metrics" {
   }
 
   prometheus.scrape "kube_components" {
-    targets = concat(
+    targets = array.concat(
       discovery.relabel.kube_proxy.output,
       discovery.relabel.kube_dns.output,
       discovery.relabel.kubelet.output,
