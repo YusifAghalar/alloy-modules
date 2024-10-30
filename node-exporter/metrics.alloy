@@ -68,6 +68,11 @@ declare "metrics" {
     }
     rule {
       source_labels = ["__name__"]
+      regex         = "node_ipvs_backend_connections_active|node_ipvs_backend_weight|node_ipvs_backend_connections_inactive"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
       regex         = "go_gc_duration_seconds"
       action        = "drop"
     }   
