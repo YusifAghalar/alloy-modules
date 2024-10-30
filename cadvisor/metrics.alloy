@@ -37,7 +37,7 @@ declare "metrics" {
 
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
-    forward_to = prometheus.relabel.cadvisor.receiver
+    forward_to = [prometheus.relabel.cadvisor.receiver]
     scrape_interval = argument.scrape_interval.value
     authorization {
       credentials_file = argument.authorization_file.value
