@@ -61,7 +61,7 @@ declare "metrics" {
     metrics {
       datapoint = [
         `IsMatch(metric.name, ".*milliseconds.*") and  Double(attributes["le"])  < 100`,
-        `IsMatch(metric.name,"http_client_duration_milliseconds_bucket")`,
+        `IsMatch(metric.name,"http_client_duration_milliseconds_bucket|http_server_requests_max_seconds|http_server_requests_seconds_bucket|http_client_duration_milliseconds_sum")`,
       ]
     }
 
