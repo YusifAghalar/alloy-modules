@@ -37,7 +37,7 @@ declare "metrics" {
 
   prometheus.scrape "cadvisor" {
     targets = discovery.relabel.cadvisor.output
-    forward_to = argument.forward_to.value
+    forward_to = prometheus.relabel.cadvisor.receiver
     scrape_interval = argument.scrape_interval.value
     authorization {
       credentials_file = argument.authorization_file.value
@@ -56,7 +56,7 @@ declare "metrics" {
     rule {
       action = "drop"
       source_labels = ["__name__"]
-      regex = "container_tasks_state"
+      regex = "container_tasks_state|container_blkio_device_usage_total|container_memory_failures_total"
     }
   }
 }
