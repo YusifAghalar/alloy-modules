@@ -1,0 +1,33 @@
+declare "self" {
+	argument "forward_to" {
+		comment = "The metrics receiver to forward data to"
+	}
+
+	prometheus.exporter.self "self_agent" { }
+
+	discovery.relabel "self_agent" {
+		targets = prometheus.exporter.self.self_agent.targets
+
+		rule {
+			target_label = "k8s_pod_name"
+			replacement  = env("POD_NAME")
+		}
+
+		rule {
+			target_label = "alloy_name"
+			replacement  = "atlas-prod-agent"
+		}
+
+		rule {
+			target_label = "cluster"
+			replacement  = "processing-prod"
+		}
+	}
+
+	prometheus.scrape "self_agent" {
+		// Collect metrics from the default listen address.
+		targets = discovery.relabel.self_agent.output
+
+		forward_to = argument.forward_to.value
+	}
+}
