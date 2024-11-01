@@ -3,6 +3,14 @@ declare "self" {
 		comment = "The metrics receiver to forward data to"
 	}
 
+  argument "alloy_name" {
+    comment = "Name of the alloy"
+  }
+
+  argument "cluster_name" {
+    comment = "Name of the cluster"
+  }
+
 	prometheus.exporter.self "self_agent" { }
 
 	discovery.relabel "self_agent" {
@@ -15,12 +23,12 @@ declare "self" {
 
 		rule {
 			target_label = "alloy_name"
-			replacement  = "atlas-prod-agent"
+			replacement  = argument.alloy_name.value
 		}
 
 		rule {
 			target_label = "cluster"
-			replacement  = "processing-prod"
+			replacement  = argument.cluster_name.value
 		}
 	}
 
