@@ -9,8 +9,7 @@ declare "slo"{
     argument "regex"{
         comment = "Regex to keep metrics" 
         optional = true 
-        default = "http_server_duration_milliseconds_count|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_total|otlp_exporter_exported_total"
-
+        default = "http_server_duration_milliseconds_count|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_total|otlp_exporter_exported_total|receiver_accepted_log_records_ratio_total|receiver_refused_log_records_ratio_total|receiver_accepted_spans_ratio_total|receiver_refused_spans_ratio_total|exporter_sent_spans_ratio_total|exporter_send_failed_spans_ratio_total|loki_write_sent_entries_total|loki_write_dropped_entries_total"
     }
 
     prometheus.relabel "default" {
