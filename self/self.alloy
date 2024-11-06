@@ -18,7 +18,7 @@ declare "self" {
 
 		rule {
 			target_label = "k8s_pod_name"
-			replacement  = env("POD_NAME")
+			replacement  = sys.env("POD_NAME")
 		}
 
 		rule {
