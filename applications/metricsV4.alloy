@@ -12,6 +12,12 @@ declare "metrics" {
     comment = "The metrics receiver to forward data to"
   }
 
+  argument "prometheus_forward_to" {
+    comment = "The metrics receiver to forward data to before converting to OTLP. Should be an array"
+    optional = true
+    default = []
+  }
+
   discovery.relabel "applications" {
     targets = argument.targets.value
 
@@ -42,7 +48,7 @@ declare "metrics" {
 
   prometheus.scrape "applications" {
     targets = discovery.relabel.applications.output
-    forward_to = [otelcol.receiver.prometheus.default.receiver]
+    forward_to = array.concat([otelcol.receiver.prometheus.default.receiver], argument.prometheus_forward_to.value)
 
     clustering {
       enabled = true
