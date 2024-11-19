@@ -18,6 +18,12 @@ declare "metrics" {
     default = []
   }
 
+  argument "cluster_name" {
+    comment = "Cluster label for the metrics"
+    optional = true
+    default = ""
+  }
+
   discovery.relabel "applications" {
     targets = argument.targets.value
 
@@ -44,6 +50,11 @@ declare "metrics" {
       target_label  = "service_name"
       action        = "replace"
     }
+
+		rule {
+			target_label = "cluster"
+			replacement  = argument.cluster_name.value
+		}
   }
 
   prometheus.scrape "applications" {
