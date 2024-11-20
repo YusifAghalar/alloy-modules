@@ -20,6 +20,7 @@ declare "metrics" {
 
   argument "cluster_name" {
     comment = "Cluster label for the metrics"
+    // TODO: This can be made non-optional after all the alloys are updated
     optional = true
     default = ""
   }
@@ -51,10 +52,10 @@ declare "metrics" {
       action        = "replace"
     }
 
-		rule {
-			target_label = "cluster"
-			replacement  = argument.cluster_name.value
-		}
+    rule {
+      target_label = "cluster"
+      replacement  = argument.cluster_name.value
+    }
   }
 
   prometheus.scrape "applications" {
