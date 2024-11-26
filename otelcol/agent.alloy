@@ -1,0 +1,228 @@
+declare "agent" {
+    argument "cluster_name" {
+        comment = "Name of the cluster"
+    }
+
+
+    // ---------------------
+    // ---- RECEIVERS -----
+    // ---------------------
+
+    otelcol.receiver.otlp "default" {
+
+        http {
+            endpoint = "0.0.0.0:4318"
+        }
+
+        output {
+            traces = [otelcol.processor.memory_limiter.default.input]
+            logs = []
+        }
+    }
+
+
+    // ---------------------
+    // ---- PROCESSORS -----
+    // ---------------------
+
+    otelcol.processor.memory_limiter "default" {
+        check_interval = "5s"
+        limit = "1300MiB"
+
+        output {
+            logs    = [otelcol.processor.k8sattributes.default.input]
+            traces  = [otelcol.processor.k8sattributes.default.input]
+        }
+    }
+
+    otelcol.processor.k8sattributes "default" {
+        extract {
+            metadata = [
+            "k8s.deployment.name",
+            "k8s.namespace.name",
+            "k8s.node.name",
+            "k8s.pod.name",
+            "k8s.container.name",
+            ]
+            
+            label {
+            from = "pod"
+            key = "owner"
+            tag_name = "owner-test"
+            }
+        }
+
+        pod_association {
+            source {
+            from = "resource_attribute"
+            name = "k8s.pod.ip"
+            }
+        }
+
+        // This part is different from otelcol config
+        pod_association {
+            source {
+            from = "resource_attribute"
+            name = "k8s.pod.name"
+            }
+            source {
+            from = "resource_attribute"
+            name = "k8s.namespace.name"
+            }
+        }
+
+        pod_association {
+            source {
+            from = "connection"
+            }
+        }
+
+        output {
+            traces = [otelcol.processor.transform.default.input]
+            logs = [otelcol.processor.transform.default.input]
+        }
+    }
+
+    otelcol.processor.transform "default" {
+        error_mode = "ignore"
+
+        trace_statements {
+            context = "resource"
+            statements = [
+            // TODO: We need coalesce to work for
+            // Coalesce(attributes["k8s.deployment.name"], attributes["k8s.daemonset.name"], attributes["k8s.statefulset.name"], attributes["container.image.name"])
+            `set(attributes["service.name"], attributes["k8s.deployment.name"])`,
+             string.format("set(attributes[\"cluster\"], \"%s\")", argument.cluster_name.value),
+            `set(attributes["namespace"], attributes["k8s.namespace.name"])`,
+            ]
+        }
+
+        trace_statements {
+            context = "resource"
+            statements = [
+            `keep_keys(attributes, ["cluster", "namespace", "service.name", "k8s.pod.name"])`,
+            `truncate_all(attributes, 4096)`,
+            ]
+        }
+
+        trace_statements {
+            context = "span"
+            statements = [
+            `delete_key(attributes, "db.statement") where attributes["db.system"] == "redis"`,
+            `delete_key(attributes, "thread.name")`,
+            `truncate_all(attributes, 2048)`,
+            ]
+        }
+
+        log_statements {
+            context = "resource"
+            statements = [
+            `set(attributes["service.namespace"], attributes["k8s.namespace.name"])`,
+            `set(attributes["service.name"], attributes["k8s.container.name"])`,
+            `set(attributes["pod.name"], attributes["k8s.pod.name"])`,
+             string.format("set(attributes[\"cluster\"], \"%s\")", argument.cluster_name.value),
+            ]
+        }
+
+        log_statements {
+            context = "resource"
+            statements = [
+            `keep_keys(attributes, ["cluster", "service.name", "service.namespace", "pod.name"])`,
+            ]
+        }
+
+        output {
+            traces = [otelcol.processor.batch.default.input]
+            logs = [otelcol.processor.attributes.default.input]
+        }
+    }
+
+    otelcol.processor.attributes "default" {
+        action {
+            key = "loki.resource.labels"
+            action = "insert"
+            value = "cluster, service.namespace, service.name"
+        }
+        
+        output {
+            logs = [otelcol.processor.batch.default.input]
+        }
+    }
+
+    otelcol.processor.batch "default" {
+        send_batch_size = 2048
+        timeout = "200ms"
+        send_batch_max_size = 8196
+
+        output {
+            traces = [otelcol.exporter.otlp.default.input]
+            logs = [otelcol.exporter.loki.default.input]
+        }
+    }
+
+
+    // ---------------------
+    // ---- EXPORTERS ------
+    // ---------------------
+
+    otelcol.exporter.otlp "default" {
+        client {
+            endpoint = "https://otel-lb.kapitalbank.az"
+            tls {
+                insecure             = false
+                insecure_skip_verify = true
+            }
+        }
+    }
+
+    otelcol.exporter.loki "default" {
+        forward_to = [loki.process.default.receiver]
+    }
+
+
+     // ---------------------
+    // ---- LOKI ------
+    // ---------------------
+
+    loki.process "default" {
+      forward_to = [loki.relabel.default.receiver]
+
+
+      stage.label_keep {
+        values = [ "service_namespace", "service_name", "level" ]
+      }
+
+      stage.drop {
+        older_than          = "24h"
+        drop_counter_reason = "too old"
+      }
+      
+      stage.drop {
+        longer_than         = "4KB"
+        drop_counter_reason = "too long"
+      }
+    }
+
+    loki.relabel "default" {
+      forward_to = [loki.write.default.receiver]
+
+      rule {
+        action        = "keep"
+        source_labels = ["level"]
+        regex         = "(DEBUG|INFO|WARN|ERROR|FATAL)"
+      }
+    }
+
+    loki.write "default" {
+      endpoint {
+        url = "https://loki.kapitalbank.az/loki/api/v1/push"
+        tenant_id = "applications"
+        tls_config {
+            // ca_file = "/conf/ssl/loki/ca.crt"
+            // cert_file = "/conf/ssl/loki/tls.crt"
+            // key_file = "/conf/ssl/loki/tls.key"
+          insecure_skip_verify = true
+        }
+    }
+  }
+}
