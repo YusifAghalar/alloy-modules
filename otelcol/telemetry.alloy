@@ -1,4 +1,4 @@
-declare "agent" {
+declare "telemetry" {
     argument "cluster_name" {
         comment = "Name of the cluster"
     }
