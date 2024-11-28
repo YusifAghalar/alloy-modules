@@ -22,7 +22,7 @@ declare "telemetry" {
     }
 
     otelcol.exporter.logging "default" {
-        level = "none"
+        verbosity = "basic"
     }
 
 
