@@ -16,13 +16,13 @@ declare "telemetry" {
 
         output {
             traces = [otelcol.processor.memory_limiter.default.input]
-            metrics = [otelcol.exporter.logging.default.input]
+            metrics = [otelcol.processor.memory_limiter.default.input]
             logs    = [otelcol.exporter.logging.default.input]
         }
     }
 
     otelcol.exporter.logging "default" {
-        level = "none"
+        verbosity = "basic"
     }
 
 
@@ -35,8 +35,9 @@ declare "telemetry" {
         limit = "1300MiB"
 
         output {
-            logs    = [otelcol.processor.k8sattributes.default.input]
             traces  = [otelcol.processor.k8sattributes.default.input]
+            metrics = [otelcol.processor.k8sattributes.default.input]
+            logs    = [otelcol.processor.k8sattributes.default.input]
         }
     }
 
@@ -84,6 +85,7 @@ declare "telemetry" {
 
         output {
             traces = [otelcol.processor.transform.default.input]
+            metrics = [otelcol.processor.transform.default.input]
             logs = [otelcol.processor.transform.default.input]
         }
     }
@@ -119,6 +121,15 @@ declare "telemetry" {
             ]
         }
 
+        metric_statements {
+            context = "datapoint"
+            statements = [
+            `set(attributes["service.name"], resource.attributes["k8s.deployment.name"])`,
+            `set(attributes["service.namespace"], resource.attributes["k8s.namespace.name"])`,
+             string.format("set(attributes[\"cluster\"], \"%s\")", argument.cluster_name.value),
+            ]
+        }
+
         log_statements {
             context = "resource"
             statements = [
@@ -138,6 +149,7 @@ declare "telemetry" {
 
         output {
             traces = [otelcol.processor.batch.default.input]
+            metrics = [otelcol.processor.batch.default.input]
             logs = [otelcol.processor.attributes.default.input]
         }
     }
@@ -160,7 +172,8 @@ declare "telemetry" {
         send_batch_max_size = 8196
 
         output {
-            traces = [otelcol.exporter.otlp.default.input]
+            traces = [otelcol.exporter.otlp.metrics.input]
+            metrics = [otelcol.exporter.otlphttp.traces.input]
             logs = [otelcol.exporter.loki.default.input]
         }
     }
@@ -170,11 +183,24 @@ declare "telemetry" {
     // ---- EXPORTERS ------
     // ---------------------
 
-    otelcol.exporter.otlp "default" {
+    otelcol.exporter.otlp "traces" {
         client {
             endpoint = "https://otel-lb.kapitalbank.az"
             tls {
                 insecure             = false
+                insecure_skip_verify = true
+            }
+        }
+    }
+
+    otelcol.exporter.otlphttp "metrics" {
+        client {
+            endpoint = "https://mimir.kapitalbank.az/otlp/"
+
+            headers = {
+                "X-Scope-OrgID" = "applications",
+            }
+            tls {
                 insecure_skip_verify = true
             }
         }
@@ -223,9 +249,6 @@ declare "telemetry" {
         url = "https://loki.kapitalbank.az/loki/api/v1/push"
         tenant_id = "applications"
         tls_config {
-            // ca_file = "/conf/ssl/loki/ca.crt"
-            // cert_file = "/conf/ssl/loki/tls.crt"
-            // key_file = "/conf/ssl/loki/tls.key"
           insecure_skip_verify = true
         }
     }
