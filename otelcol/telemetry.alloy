@@ -121,6 +121,9 @@ declare "telemetry" {
             ]
         }
 
+        # mimir converts service.namespace and service.name attributes to job=service.namespace/service.name label,
+        # to workaround this these attributes copied to datapoint context.
+        # for more information refer to https://grafana.com/docs/mimir/latest/configure/configure-otel-collector/#format-considerations
         metric_statements {
             context = "datapoint"
             statements = [
