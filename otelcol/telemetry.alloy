@@ -184,8 +184,8 @@ declare "telemetry" {
         send_batch_max_size = 8196
 
         output {
-            traces = [otelcol.exporter.otlp.metrics.input]
-            metrics = [otelcol.exporter.otlphttp.traces.input]
+            traces = [otelcol.exporter.otlp.traces.input]
+            metrics = [otelcol.exporter.otlphttp.metrics.input]
             logs = [otelcol.exporter.loki.default.input]
         }
     }
