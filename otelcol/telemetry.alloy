@@ -3,6 +3,23 @@ declare "telemetry" {
         comment = "Name of the cluster"
     }
 
+    argument "logs_endpoint" {
+        comment = "Specifies the endpoint URL where log data will be sent for storage."
+        default = "https://loki.kapitalbank.az/loki/api/v1/push"
+        optional = true
+    }
+
+    argument "traces_endpoint" {
+        comment = "Specifies the endpoint URL used to send distributed trace data for storage."
+        default = "https://otel-lb.kapitalbank.az"
+        optional = true
+    }
+
+    argument "metrics_endpoint" {
+        comment = "Specifies the endpoint URL where metrics data will be sent."
+        default = "https://mimir.kapitalbank.az/otlp/"
+        optional = true
+    }
 
     // ---------------------
     // ---- RECEIVERS -----
@@ -197,7 +214,7 @@ declare "telemetry" {
 
     otelcol.exporter.otlp "traces" {
         client {
-            endpoint = "https://otel-lb.kapitalbank.az"
+            endpoint = argument.traces_endpoint.value
             tls {
                 insecure             = false
                 insecure_skip_verify = true
@@ -207,7 +224,7 @@ declare "telemetry" {
 
     otelcol.exporter.otlphttp "metrics" {
         client {
-            endpoint = "https://mimir.kapitalbank.az/otlp/"
+            endpoint = argument.metrics_endpoint.value
 
             headers = {
                 "X-Scope-OrgID" = "applications",
@@ -258,7 +275,7 @@ declare "telemetry" {
 
     loki.write "default" {
       endpoint {
-        url = "https://loki.kapitalbank.az/loki/api/v1/push"
+        url = argument.logs_endpoint.value
         tenant_id = "applications"
         tls_config {
           insecure_skip_verify = true
