@@ -5,20 +5,14 @@ declare "telemetry" {
 
     argument "logs_endpoint" {
         comment = "Specifies the endpoint URL where log data will be sent for storage."
-        default = "https://loki.kapitalbank.az/loki/api/v1/push"
-        optional = true
     }
 
     argument "traces_endpoint" {
         comment = "Specifies the endpoint URL used to send distributed trace data for storage."
-        default = "https://otel-lb.kapitalbank.az"
-        optional = true
     }
 
     argument "metrics_endpoint" {
-        comment = "Specifies the endpoint URL where metrics data will be sent."
-        default = "https://mimir.kapitalbank.az/otlp/"
-        optional = true
+        comment = "Specifies the endpoint URL where metrics data will be sent for storage."
     }
 
     // ---------------------
