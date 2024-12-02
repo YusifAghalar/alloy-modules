@@ -28,11 +28,11 @@ declare "telemetry" {
         output {
             traces = [otelcol.processor.memory_limiter.default.input]
             metrics = [otelcol.processor.memory_limiter.default.input]
-            logs    = [otelcol.exporter.logging.default.input]
+            logs    = [otelcol.exporter.debug.default.input]
         }
     }
 
-    otelcol.exporter.logging "default" {
+    otelcol.exporter.debug "default" {
         verbosity = "basic"
     }
 
