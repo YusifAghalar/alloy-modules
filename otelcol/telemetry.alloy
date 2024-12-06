@@ -3,6 +3,11 @@ declare "telemetry" {
         comment = "Name of the cluster"
     }
 
+    argument "memory_limiter_limit" {
+        comment = "Maximum amount of memory targeted to be allocated by the process heap."
+        default = "1300MiB"
+    }
+
     argument "logs_endpoint" {
         comment = "Specifies the endpoint URL where log data will be sent for storage."
     }
