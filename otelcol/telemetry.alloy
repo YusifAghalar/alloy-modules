@@ -5,11 +5,13 @@ declare "telemetry" {
 
     argument "memory_limiter_limit" {
         comment = "Maximum amount of memory targeted to be allocated by the process heap."
+        optional = true
         default = "1300MiB"
     }
 
     argument "traces_sending_queue_size" {
         comment = "Maximum number of unwritten batches allowed in the queue at the same time."
+        optional = true
         default = 1000
     }
 
