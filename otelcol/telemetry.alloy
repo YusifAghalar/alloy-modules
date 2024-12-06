@@ -48,7 +48,7 @@ declare "telemetry" {
 
     otelcol.processor.memory_limiter "default" {
         check_interval = "5s"
-        limit = "1300MiB"
+        limit = argument.memory_limiter_limit.value
 
         output {
             traces  = [otelcol.processor.k8sattributes.default.input]
