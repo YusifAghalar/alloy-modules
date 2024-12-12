@@ -28,7 +28,7 @@ declare "telemetry" {
     }
 
     argument "otlp_http_receiver_endpoint" {
-        comment = "Otlp http endpoint."
+        comment = "Otlp http receiver endpoint."
         optional = true
         default = "0.0.0.0:4318"
     }
