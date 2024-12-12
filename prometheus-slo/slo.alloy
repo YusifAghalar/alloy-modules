@@ -1,0 +1,34 @@
+declare "slo"{
+
+    argument "url" {
+        comment = "URL to send metrics to"
+        optional = true
+        default = "http://prometheus-prometheus.prometheus-slo:9090/api/v1/write"
+    }
+
+    argument "regex"{
+        comment = "Regex to keep metrics" 
+        optional = true 
+        default = "http_server_duration_milliseconds_count|prometheus_remote_storage_samples_failed_total|prometheus_remote_storage_samples_total|otlp_exporter_exported_total|otelcol_receiver_accepted_log_records_total|otelcol_receiver_refused_log_records_total|otelcol_receiver_accepted_spans_total|otelcol_receiver_refused_spans_total|otelcol_exporter_sent_spans_total|otelcol_exporter_send_failed_spans_total|loki_write_sent_entries_total|loki_write_dropped_entries_total|otelcol_exporter_send_failed_metric_points_total|otelcol_exporter_sent_metric_points_total"
+    }
+
+    prometheus.relabel "default" {
+        forward_to = [prometheus.remote_write.default.receiver]
+        
+        rule {
+            action = "keep"
+            source_labels = ["__name__"]
+            regex = argument.regex.value
+        }
+    }
+
+    prometheus.remote_write "default" {
+        endpoint {
+            url = argument.url.value
+        }
+    }
+
+    export "receiver" {
+        value = prometheus.relabel.default.receiver
+    }
+}

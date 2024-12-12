@@ -1,0 +1,50 @@
+declare "metrics" {
+  // Define arguments
+  argument "job_name" {
+    comment = "Name of the scrape job"
+  }
+
+  argument "bearer_token" {
+    comment = "Bearer token for authentication"
+  }
+
+  argument "metrics_path" {
+    comment = "Path to scrape metrics from"
+    default = "/metrics"
+    optional = true
+  }
+
+  argument "scheme" {
+    comment = "Scheme to use (http or https)"
+    default = "http"
+    optional = true
+  }
+
+  argument "targets" {
+    comment = "List of targets to scrape metrics from"
+  }
+  argument "forward_to" {
+    comment = "Forward to target"
+  }
+  argument "skip_verify" {
+    comment = "Skip insecure tls verification (default : true)"
+    default = true
+    optional = true
+  }
+
+    
+  prometheus.scrape "minio" {
+    job_name = argument.job_name.value
+    bearer_token = argument.bearer_token.value
+    metrics_path = argument.metrics_path.value
+    scheme = argument.scheme.value
+    targets = argument.targets.value
+    forward_to = argument.forward_to.value
+    clustering {
+      enabled = true
+    }
+    tls_config {
+      insecure_skip_verify = argument.skip_verify.value
+    }
+  }
+}

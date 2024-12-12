@@ -1,0 +1,61 @@
+declare "metrics" {
+  argument "targets" {
+    comment = "The targets to be discovered"
+  }
+
+  argument "port" {
+    comment = "The port to be listened for metrics"
+    default = "9464"
+    optional = true
+  }
+
+  argument "forward_to" {
+    comment = "The metrics receiver to forward data to"
+  }
+
+  discovery.relabel "applications" {
+    targets = argument.targets.value
+
+    rule {
+      action = "keep"
+      source_labels = ["__meta_kubernetes_pod_container_port_number"]
+      regex = argument.port.value
+    }
+
+    rule {
+      action = "labelmap"
+      regex = "__meta_kubernetes_(pod_label_app_io_name|pod_name)"
+      replacement = "k8s_${1}"
+    }
+
+    rule {
+      source_labels = ["__meta_kubernetes_namespace"]
+      target_label  = "service_namespace"
+      action        = "replace"
+    }
+
+    rule {
+      source_labels = ["__meta_kubernetes_pod_container_name"]
+      target_label  = "service_name"
+      action        = "replace"
+    }
+  }
+
+  prometheus.scrape "applications" {
+    targets = discovery.relabel.applications.output
+    forward_to = [prometheus.relabel.applications.receiver]
+
+    clustering {
+      enabled = true
+    }
+  }
+
+  prometheus.relabel "applications" {
+    forward_to = argument.forward_to.value
+
+    rule {
+      action = "labeldrop"
+      regex  = "otel_scope_version|net_host_port|net_protocol_name|net_protocol_version"
+    }
+  }
+}

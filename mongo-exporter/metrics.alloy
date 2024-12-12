@@ -1,0 +1,134 @@
+declare "frontend_application" {
+  // Define arguments
+  argument "service_namespace" {
+    comment = "Namespace of the frontend service"
+  }
+
+  argument "listen_address" {
+    comment = "Address to listen for incoming requests"
+    default = "0.0.0.0"
+    optional = true
+  }
+
+  argument "cors_allowed_origins" {
+    comment = "CORS allowed origins"
+    default = ["*"]
+    optional = true
+  }
+
+  argument "log_endpoint_url" {
+    comment = "Endpoint URL for log forwarding"
+  }
+
+  argument "log_tenant_id" {
+    comment = "Tenant ID for log forwarding"
+  }
+
+  argument "otel_endpoint" {
+    comment = "Endpoint for OTLP exporter"
+  }
+
+  argument "tls_cert_file" {
+    comment = "TLS certificate file path"
+  }
+
+  argument "tls_key_file" {
+    comment = "TLS key file path"
+  }
+
+  argument "tls_insecure_skip_verify" {
+    comment = "TLS insecure skip verify"
+    optional = true
+  }
+
+  argument "insecure" {
+    comment = "TLS insecure"
+    optional = false
+  }
+
+  argument "queue_size" {
+    comment = "OtelCol sendings queue size"
+  }  
+
+
+  // Faro receiver configuration
+  faro.receiver "default" {
+    extra_log_labels = {
+      "service_namespace" = argument.service_namespace.value,
+    }
+    server {
+      listen_address = argument.listen_address.value
+      cors_allowed_origins = argument.cors_allowed_origins.value
+    }
+    output {
+      logs   = [loki.process.default.receiver]
+      traces = [otelcol.exporter.otlp.default.input]
+    }
+  }
+
+  // Loki write configuration
+  loki.write "default" {
+    endpoint {
+      url = argument.log_endpoint_url.value
+      tenant_id = argument.log_tenant_id.value
+      tls_config {
+        cert_file = argument.tls_cert_file.value
+        key_file = argument.tls_key_file.value
+        insecure_skip_verify = argument.tls_insecure_skip_verify.value
+      }
+    }
+  }
+
+  // OTLP exporter configuration
+  otelcol.exporter.otlp "default" {
+    client {
+      endpoint = argument.otel_endpoint.value
+      tls {
+        insecure_skip_verify = argument.tls_insecure_skip_verify.value
+        insecure = argument.insecure.value
+        cert_file = argument.tls_cert_file.value
+        key_file = argument.tls_key_file.value
+      }
+    }
+    sending_queue {
+      queue_size = argument.queue_size.value
+    }
+  }
+
+  // Loki process configuration
+  loki.process "default" {
+    forward_to = [loki.relabel.frontend.receiver]
+    stage.logfmt {
+      mapping = { "app_name"="", "level"=""}
+    }
+    stage.labels {
+      values = {
+        "service_name"= "app_name",
+        "level"= "level",
+      }
+    }
+    stage.drop {
+      older_than = "24h"
+      drop_counter_reason = "too old"
+    }
+    stage.drop {
+      longer_than = "4KB"
+      drop_counter_reason = "too long"
+    }
+  }
+
+  // Loki relabel configuration
+  loki.relabel "frontend" {
+    forward_to = [loki.write.optimus_default.receiver]
+    rule {
+      action = "uppercase"
+      source_labels = ["level"]
+      target_label = "level"
+    }
+    rule {
+      action = "keep"
+      source_labels = ["level"]
+      regex = "(DEBUG|INFO|WARN|ERROR|FATAL|CRITICAL)"
+    }
+  }
+}

@@ -1,0 +1,81 @@
+declare "metrics" {
+  // Define arguments
+  argument "targets" {
+    comment = "List of targets to scrape metrics from"
+  }
+
+  argument "forward_to" {
+    comment = "Metrics receiver to forward collected data"
+  }
+
+  argument "scrape_interval" {
+    comment = "How often to scrape metrics (default: 60s)"
+    default = "60s"
+    optional = true
+  }
+
+  argument "job_name" {
+    comment = "Job name to be passed to scraper"
+  }
+
+  prometheus.scrape "node_exporter" {
+    targets = argument.targets.value
+    forward_to = argument.forward_to.value
+    scrape_interval = argument.scrape_interval.value
+    clustering {
+      enabled = true
+    }
+    job_name = argument.job_name.value
+  }
+
+  prometheus.relabel "node_exporter" {
+    forward_to = argument.forward_to.value
+
+    rule {
+      source_labels = ["__name__"]
+      regex         = "node_softnet_(flow_limit_count_total|backlog_len|cpu_collision_total|received_rps_total)"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex         = "node_disk_(info|filesystem_info|discarded_sectors_total|io_now)"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex         = "node_network_(net_dev_group|protocol_type|carrier_changes_total|flags|iface_id|iface_link_mode|iface_link|device_id|dormant|receive_nohandler_total|carrier_down_changes_total|carrier_up_changes_total|name_assign_type)"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex         = "node_cpu_scaling_governor"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex         = "node_udp_queues"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex         = "node_scrape_(collector_duration_seconds|collector_success)"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex         = "node_(hwmon|entropy|nf_conntrack|ipvs|nfs|power_supply|rapl|schedstat|sockstat|softnet|textfile|timex|udp_queues|xfs|cooling).*"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex         = "node_ipvs_backend_connections_active|node_ipvs_backend_weight|node_ipvs_backend_connections_inactive"
+      action        = "drop"
+    }
+    rule {
+      source_labels = ["__name__"]
+      regex         = "go_gc_duration_seconds"
+      action        = "drop"
+    }   
+ }
+}
+
