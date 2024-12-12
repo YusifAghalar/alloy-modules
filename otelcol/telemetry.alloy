@@ -28,7 +28,7 @@ declare "telemetry" {
     }
 
     argument "otlp_http_receiver_endpoint" {
-        comment = "Otlp http receiver endpoint."
+        comment = "Otlp http receiver endpoint"
         optional = true
         default = "0.0.0.0:4318"
     }
@@ -37,7 +37,6 @@ declare "telemetry" {
     // ---------------------
 
     otelcol.receiver.otlp "default" {
-
         http {
             endpoint = argument.otlp_http_receiver_endpoint.value
         }
