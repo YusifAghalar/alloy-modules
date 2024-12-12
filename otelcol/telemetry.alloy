@@ -27,6 +27,11 @@ declare "telemetry" {
         comment = "Specifies the endpoint URL where metrics data will be sent for storage."
     }
 
+    argument "otlp_http_receiver_endpoint" {
+        comment = "Otlp http receiver endpoint"
+        optional = true
+        default = "0.0.0.0:4318"
+    }
     // ---------------------
     // ---- RECEIVERS -----
     // ---------------------
@@ -34,7 +39,7 @@ declare "telemetry" {
     otelcol.receiver.otlp "default" {
 
         http {
-            endpoint = "0.0.0.0:4318"
+            endpoint = argument.otlp_http_receiver_endpoint.value
         }
 
         output {
