@@ -20,7 +20,7 @@ declare "metrics" {
 
   prometheus.scrape "node_exporter" {
     targets = argument.targets.value
-    forward_to = argument.forward_to.value
+    forward_to = [prometheus.relabel.node_exporter.receiver]
     scrape_interval = argument.scrape_interval.value
     clustering {
       enabled = true
