@@ -53,6 +53,12 @@ declare "metrics" {
     }
 
     rule {
+      source_labels = ["__meta_kubernetes_pod_container_name"]
+      target_label  = "job"
+      action        = "replace"
+    }
+
+    rule {
       target_label = "cluster"
       replacement  = argument.cluster_name.value
     }
