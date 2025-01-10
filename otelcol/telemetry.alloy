@@ -32,6 +32,12 @@ declare "telemetry" {
         optional = true
         default = "0.0.0.0:4318"
     }
+
+    argument "otlp_grpc_receiver_endpoint" {
+        comment = "Otlp grpc receiver endpoint"
+        optional = true
+        default = "0.0.0.0:4317"
+    }
     // ---------------------
     // ---- RECEIVERS -----
     // ---------------------
@@ -40,6 +46,14 @@ declare "telemetry" {
 
         http {
             endpoint = argument.otlp_http_receiver_endpoint.value
+        }
+
+                grpc {
+            endpoint = argument.otlp_grpc_receiver_endpoint.value
+            keepalive{
+                server_parameters{
+                    max_connection_age = "30m"
+                }
         }
 
         output {
