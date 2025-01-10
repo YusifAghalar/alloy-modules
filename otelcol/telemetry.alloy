@@ -48,7 +48,7 @@ declare "telemetry" {
             endpoint = argument.otlp_http_receiver_endpoint.value
         }
 
-                grpc {
+        grpc {
             endpoint = argument.otlp_grpc_receiver_endpoint.value
             keepalive{
                 server_parameters{
