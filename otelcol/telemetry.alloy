@@ -54,6 +54,7 @@ declare "telemetry" {
                 server_parameters{
                     max_connection_age = "30m"
                 }
+            }
         }
 
         output {
