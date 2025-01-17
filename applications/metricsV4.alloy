@@ -86,7 +86,7 @@ declare "metrics" {
     metrics {
       datapoint = [
         `IsMatch(metric.name, ".*milliseconds.*") and  Double(attributes["le"])  < 100`,
-        `IsMatch(metric.name,"http_client_duration_milliseconds_bucket|http_server_requests_max_seconds|http_server_requests_seconds_bucket|http_client_duration_milliseconds_sum")`,
+        `IsMatch(metric.name,"http_server_requests_max_seconds|http_server_requests_seconds_bucket")`,
       ]
     }
 
@@ -102,7 +102,7 @@ declare "metrics" {
     metric_statements {
       context = "metric"
       statements = [
-        `aggregate_on_attributes("sum",["http_route","le","http_status_code","http_method","service_namespace","service_name","cluster"]) where name == "http_server_duration_milliseconds_bucket" or  name == "http_client_duration_milliseconds_bucket"`,
+        `aggregate_on_attributes("sum",["http_route","le","http_status_code","http_method","service_namespace","service_name","cluster"]) where name == "http_server_duration_milliseconds_bucket"`,
       ]
     }
 
