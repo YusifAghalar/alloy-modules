@@ -52,7 +52,7 @@ declare "telemetry" {
             endpoint = argument.otlp_grpc_receiver_endpoint.value
             keepalive{
                 server_parameters{
-                    max_connection_age = "30m"
+                    max_connection_age = "10m"
                 }
             }
         }
