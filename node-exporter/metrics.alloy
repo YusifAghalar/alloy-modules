@@ -25,6 +25,9 @@ declare "metrics" {
     clustering {
       enabled = true
     }
+    tls_config {
+      insecure_skip_verify = true
+    }
     job_name = argument.job_name.value
   }
 
