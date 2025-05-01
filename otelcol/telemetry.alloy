@@ -186,38 +186,9 @@ declare "telemetry" {
             ]
         }
 
-        log_statements {
-            context = "resource"
-            statements = [
-            `set(attributes["service.namespace"], attributes["k8s.namespace.name"])`,
-            `set(attributes["service.name"], attributes["k8s.container.name"])`,
-            `set(attributes["pod.name"], attributes["k8s.pod.name"])`,
-             string.format("set(attributes[\"cluster\"], \"%s\")", argument.cluster_name.value),
-            ]
-        }
-
-        log_statements {
-            context = "resource"
-            statements = [
-            `keep_keys(attributes, ["cluster", "service.name", "service.namespace", "pod.name"])`,
-            ]
-        }
-
         output {
             traces = [otelcol.processor.batch.default.input]
             metrics = [otelcol.processor.batch.default.input]
-            logs = [otelcol.processor.attributes.default.input]
-        }
-    }
-
-    otelcol.processor.attributes "default" {
-        action {
-            key = "loki.resource.labels"
-            action = "insert"
-            value = "cluster, service.namespace, service.name"
-        }
-        
-        output {
             logs = [otelcol.processor.batch.default.input]
         }
     }
@@ -230,7 +201,7 @@ declare "telemetry" {
         output {
             traces = [otelcol.exporter.otlp.traces.input]
             metrics = [otelcol.exporter.otlphttp.metrics.input]
-            logs = [otelcol.exporter.loki.default.input]
+            logs = [otelcol.exporter.otlphttp.logs.input]
         }
     }
 
@@ -265,51 +236,16 @@ declare "telemetry" {
         }
     }
 
-    otelcol.exporter.loki "default" {
-        forward_to = [loki.process.default.receiver]
-    }
+    otelcol.exporter.otlphttp "logs" {
+        client {
+            endpoint = argument.logs_endpoint.value
 
-
-     // ---------------------
-    // ---- LOKI ------
-    // ---------------------
-
-    loki.process "default" {
-      forward_to = [loki.relabel.default.receiver]
-
-
-      stage.label_keep {
-        values = [ "service_namespace", "service_name", "level" ]
-      }
-
-      stage.drop {
-        older_than          = "24h"
-        drop_counter_reason = "too old"
-      }
-      
-      stage.drop {
-        longer_than         = "4KB"
-        drop_counter_reason = "too long"
-      }
-    }
-
-    loki.relabel "default" {
-      forward_to = [loki.write.default.receiver]
-
-      rule {
-        action        = "keep"
-        source_labels = ["level"]
-        regex         = "(DEBUG|INFO|WARN|ERROR|FATAL)"
-      }
-    }
-
-    loki.write "default" {
-      endpoint {
-        url = argument.logs_endpoint.value
-        tenant_id = "applications"
-        tls_config {
-          insecure_skip_verify = true
+            headers = {
+                "X-Scope-OrgID" = "applications",
+            }
+            tls {
+                insecure_skip_verify = true
+            }
         }
     }
-  }
 }
