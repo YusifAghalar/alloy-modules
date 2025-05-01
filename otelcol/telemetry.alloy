@@ -19,12 +19,36 @@ declare "telemetry" {
         comment = "Specifies the endpoint URL where log data will be sent for storage."
     }
 
+    argument "logs_tenant" {
+        comment = "Specifies the tenant where logs data will be sent for storage."
+        optional = true
+        default = "all-prod"
+    }
+
+    argument "logs_initial_filter" {
+        comment = "Expression used for initial logs filter."
+        optional = true
+        default = "true"
+    }
+
+     argument "logs_final_filter" {
+        comment = "Expression used for final logs filter."
+        optional = true
+        default = "true"
+    }
+
     argument "traces_endpoint" {
         comment = "Specifies the endpoint URL used to send distributed trace data for storage."
     }
 
     argument "metrics_endpoint" {
         comment = "Specifies the endpoint URL where metrics data will be sent for storage."
+    }
+
+    argument "metrics_tenant" {
+        comment = "Specifies the tenant where metrics data will be sent for storage."
+        optional = true
+        default = "all-prod"
     }
 
     argument "otlp_http_receiver_endpoint" {
@@ -58,16 +82,22 @@ declare "telemetry" {
         }
 
         output {
-            traces = [otelcol.processor.memory_limiter.default.input]
+            traces  = [otelcol.processor.memory_limiter.default.input]
             metrics = [otelcol.processor.memory_limiter.default.input]
-            logs    = [otelcol.exporter.debug.default.input]
+            logs    = [otelcol.processor.filter.logs_initial.input]
         }
     }
 
-    otelcol.exporter.debug "default" {
-        verbosity = "basic"
+    otelcol.processor.filter "logs_initial" {
+        logs {
+           log_record = [
+               argument.logs_initial_filter.value,
+           ]
+        }
+        output {
+            logs = [otelcol.processor.memory_limiter.default.input]
+        }
     }
-
 
     // ---------------------
     // ---- PROCESSORS -----
@@ -186,9 +216,49 @@ declare "telemetry" {
             ]
         }
 
+        log_statements {
+            context = "resource"
+            statements = [
+            `set(attributes["service.namespace"], attributes["k8s.namespace.name"])`,
+            `set(attributes["service.name"], attributes["k8s.container.name"])`,
+            `set(attributes["pod.name"], attributes["k8s.pod.name"])`,
+             string.format("set(attributes[\"cluster\"], \"%s\")", argument.cluster_name.value),
+            ]
+        }
+
+        log_statements {
+            context = "resource"
+            statements = [
+            `keep_keys(attributes, ["cluster", "service.name", "service.namespace", "pod.name"])`,
+            ]
+        }
+
         output {
             traces = [otelcol.processor.batch.default.input]
             metrics = [otelcol.processor.batch.default.input]
+            logs = [otelcol.processor.filter.logs_final.input]
+        }
+    }
+
+    otelcol.processor.filter "logs_final" {
+            logs {
+               log_record = [
+                   argument.logs_final_filter.value,
+               ]
+            }
+            output {
+                logs = [otelcol.processor.attributes.default.input]
+            }
+        }
+
+    otelcol.processor.attributes "default" {
+        action {
+            key = "loki.resource.labels"
+            action = "insert"
+            value = "cluster, service.namespace, service.name"
+        }
+        
+        output {
             logs = [otelcol.processor.batch.default.input]
         }
     }
@@ -200,8 +270,8 @@ declare "telemetry" {
 
         output {
             traces = [otelcol.exporter.otlp.traces.input]
-            metrics = [otelcol.exporter.otlphttp.metrics.input]
-            logs = [otelcol.exporter.otlphttp.logs.input]
+            metrics = [otelcol.exporter.otlphttp.metrics.input, otelcol.exporter.otlphttp.metrics_all.input]
+            logs = [otelcol.exporter.loki.default.input]
         }
     }
 
@@ -236,16 +306,64 @@ declare "telemetry" {
         }
     }
 
-    otelcol.exporter.otlphttp "logs" {
+    otelcol.exporter.otlphttp "metrics_all" {
         client {
-            endpoint = argument.logs_endpoint.value
+            endpoint = argument.metrics_endpoint.value
 
             headers = {
-                "X-Scope-OrgID" = "applications",
+                "X-Scope-OrgID" = argument.metrics_tenant.value,
             }
             tls {
                 insecure_skip_verify = true
             }
         }
     }
+
+    otelcol.exporter.loki "default" {
+        forward_to = [loki.process.default.receiver]
+    }
+
+
+     // ---------------------
+    // ---- LOKI ------
+    // ---------------------
+
+    loki.process "default" {
+      forward_to = [loki.relabel.default.receiver]
+
+
+      stage.label_keep {
+        values = [ "service_namespace", "service_name", "level" ]
+      }
+
+      stage.drop {
+        older_than          = "24h"
+        drop_counter_reason = "too old"
+      }
+      
+      stage.drop {
+        longer_than         = "4KB"
+        drop_counter_reason = "too long"
+      }
+    }
+
+    loki.relabel "default" {
+      forward_to = [loki.write.default.receiver]
+
+      rule {
+        action        = "keep"
+        source_labels = ["level"]
+        regex         = "(DEBUG|INFO|WARN|ERROR|FATAL)"
+      }
+    }
+
+    loki.write "default" {
+      endpoint {
+        url = argument.logs_endpoint.value
+        tenant_id = argument.logs_tenant.value
+        tls_config {
+          insecure_skip_verify = true
+        }
+    }
+  }
 }
